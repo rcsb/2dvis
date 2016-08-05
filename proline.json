@@ -1,0 +1,26 @@
+{
+  "nodes": [
+  	{"id": "O1", "group": 1, "size": 10, "color": "O"},
+    {"id": "H1", "group": 1, "size": 8, "color": "H"},
+    {"id": "C1", "group": 1, "size": 16, "color": "C"},
+    {"id": "N1", "group": 1, "size": 12, "color": "N"},
+    {"id": "H2", "group": 1, "size": 8, "color": "H"},
+    {"id": "C2", "group": 1, "size": 16, "color": "C"},
+    {"id": "C3", "group": 1, "size": 16, "color": "C"},
+    {"id": "C4", "group": 1, "size": 16, "color": "C"},
+    {"id": "C5", "group": 1, "size": 16, "color": "C"},
+    {"id": "O2", "group": 1, "size": 10, "color": "O"}
+  ],
+  "links": [
+    {"source": "O2", "target": "C1", "value": 1, "bond": 2},
+    {"source": "C1", "target": "O1", "value": 1, "bond": 1},
+    {"source": "O1", "target": "H1", "value": 1, "bond": 1},
+    {"source": "C1", "target": "C2", "value": 1, "bond": 1},
+    {"source": "C2", "target": "N1", "value": 1, "bond": 1},
+    {"source": "N1", "target": "H2", "value": 1, "bond": 1},
+    {"source": "N1", "target": "C5", "value": 1, "bond": 1},
+    {"source": "C2", "target": "C3", "value": 1, "bond": 1},
+    {"source": "C3", "target": "C4", "value": 1, "bond": 1},
+    {"source": "C4", "target": "C5", "value": 1, "bond": 1}
+  ]
+}

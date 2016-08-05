@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<meta charset="utf-8">
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<svg id="rectangle" width="960" height="600"></svg>
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+
+
+<body>
+	<!--four sliders and showing values after being clicked-->
+	<p>Change Force Center Slider</p>
+		<input class="ForceCenterSlider" type="range" id="One" name="sliderOne" min="-100" max="100" step="5" value="0"><br>
+	<p id="info"></p>	
+
+	<p>Change Strength Slider</p>
+		<input id="Two" type="range" name="sliderTwo" min="-2000" max="0" step="2" value="-1000"><br>
+	<p id="info2"></p>
+
+	<p>Primary Bond Strength Slider</p>
+		<input id="Three" type="range" name="sliderThree" min="1" max="100" step="1" value="40"><br>
+	<p id="info3"></p>
+
+	<p>Secondary Bond Strength Slider</p>
+		<input id="Four" type="range" name="sliderFour" min="1" max="100" step="1" value= "50"><br>
+	<p id="info4"></p>
+
+</body>
+
+<script src="./graph.js"></script>
