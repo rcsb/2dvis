@@ -1,0 +1,36 @@
+/*comment style
+*/
+
+.ForceCenterSlider{
+	width: 200px;
+}
+
+.link line {
+  stroke-width: 2px;
+  stroke: #aaa;
+}
+
+.node circle {
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.link line.separator {
+  stroke: #fff;
+  stroke-width: 2px;
+}
+
+.node text {
+  font: 10px sans-serif;
+  pointer-events: none;
+}
+
+.link2 line {
+	stroke-width: 2px;
+  	stroke: #fff;
+}
+
+.link3 line {
+  stroke-width: 2px;
+  stroke: #fff;
+}

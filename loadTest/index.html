@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+
+<meta charset="utf-8">
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<svg id="rectangle" width="1400" height="1000"></svg>
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+
+
+<body>
+	<!--four sliders and showing values after being clicked-->
+	<p>Change Force Center Slider</p>
+		<input class="ForceCenterSlider" type="range" id="One" name="sliderOne" min="-200" max="50" step="5" value="-100"><br>
+	<p id="info"></p>	
+
+	<p>Change Strength Slider</p>
+		<input id="Two" type="range" name="sliderTwo" min="-4000" max="-300" step="5" value="-1000"><br>
+	<p id="info2"></p>
+
+	<p>Primary Bond Strength Slider</p>
+		<input id="Three" type="range" name="sliderThree" min="0" max="2" step="0.05" value="1.5"><br>
+	<p id="info3"></p>
+
+	<p>Secondary Bond Strength Slider</p>
+		<input id="Four" type="range" name="sliderFour" min="0" max="1" step="0.05" value= "0.2"><br>
+	<p id="info4"></p>
+
+	<div id="viewport" style="width:400px; height:400px;"></div>
+
+</body>
+
+<!-- add the script for NGL -->
+<script src="https://rawgit.com/arose/ngl/master/dist/ngl.js"></script>
+
+<script src="./graph.js"></script>
+
+<script>
+
+	var graph = prepareGraph();
+
+	var simulation;		//global variable so it can get the simulation from graph.js
+
+	//initialize the slider and display values
+	initSlider( "info", "One" );
+	initSlider( "info2", "Two" );
+	initSlider( "info3", "Three" );
+	initSlider( "info4", "Four" );
+
+	//Event listener for change force center 
+	var el = document.getElementById("One");
+	el.addEventListener("input", function(){ changeForceCenter( simulation ) }, false);
+
+	var e2 = document.getElementById("Two");
+	e2.addEventListener("input", function(){ changeStrength( simulation ) }, false);
+
+	var e3 = document.getElementById("Three");        
+	e3.addEventListener("input", function(){ changePrimaryStrength( simulation ) }, false);
+
+	var e4 = document.getElementById("Four");
+	e4.addEventListener("input", function(){ changeSecStrength( simulation ) }, false);
+
+
+</script>
+ 
