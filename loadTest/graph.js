@@ -642,6 +642,8 @@ function initRendering( graph ){
     d.fx = null;
     d.fy = null;
   }
+
+  return simulation;
 }
 
 //////////////////////////////////End of Displaying /////////////////////////////////////////////////////
