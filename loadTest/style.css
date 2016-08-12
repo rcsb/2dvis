@@ -16,7 +16,7 @@
 }
 
 .link line.separator {
-  stroke: #fff;
+  stroke: #fff;      /*color white*/
   stroke-width: 2px;
 }
 
@@ -27,10 +27,10 @@
 
 .link2 line {
 	stroke-width: 2px;
-  	stroke: #fff;
+  	stroke: #fff;    /*color white*/
 }
 
 .link3 line {
   stroke-width: 2px;
-  stroke: #fff;
+  stroke: #fff;      /*color white*/
 }

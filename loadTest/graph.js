@@ -1,11 +1,137 @@
 /** 
  *  FileName: graph.js
  *  Start: July 5th
- *  Last Modified: Aug 11th
+ *  Last Modified: Aug 12th
  *  Purpose: Testing, Understanding D3, event listener, javascript
  */
 
-////////////////////////////////Start of Trying to create Secondary bond//////////////////////////////////
+/**
+ * print of the message (including the value of the current slider position)
+ *
+ * @function
+ * @param {string}  [id]    - the id of the slider
+ * @param {long}    [value] - the current value of the slider
+ */
+function setInfo( id, value ){                      
+  document.getElementById(id).innerHTML="current value is : " + value;
+}
+
+/**
+ * get the value of the slider
+ * 
+ * @function
+ * @param {string} [id] [the id of the slider]
+ * @return {long}  [the current value of the slider]
+ */
+function getValue( id ){                             
+  return document.getElementById(id).value;
+}
+
+/**
+ * called to display and initial slider
+ *
+ * @function
+ * @param {string} [infoId] [the id that helps determine which message to print that shows the slider value]
+ * @param {string} [sliderId] [the id of the slider]
+ * @return - No return
+ */
+function initSlider( infoId, sliderId ){              
+  setInfo(infoId, getValue(sliderId));
+  document.getElementById(sliderId).addEventListener("change", 
+        function(){                                   //execute when the slider value changes
+          setInfo(infoId, getValue(sliderId));
+        }, false);
+}
+
+/**
+ * first slider, corresponds with the node that changes the center of the force, which shifts 
+ * the structure along y=-x diagonally
+ *
+ * @function
+ * @param {simulation} [simulation] [the simulation data returned from initial rendering]
+ * @return - No return
+ */
+function changeForceCenter( simulation ){             
+  var val;                                            
+  var newH;                                           //new height of the center
+  var newW;                                           //new width of the center
+
+  var svg = d3.select("svg"),
+      width = +svg.attr("width"),
+      height = +svg.attr("height");
+
+  val = getValue("One");                              //get value of the slider
+  newW = (width + parseInt(val) );                    //change the width corresponds to the new slider value
+  newH = (height + parseInt(val) );                   //change the height corresponds to the new slider value
+
+  var centerF = simulation.force("center");           //original center force
+  centerF.x(newW/2);
+  centerF.y(newH/2);
+
+  simulation.restart();                               //reset the timer
+  simulation.alpha(1);                                //restart the simulation, set the alpha value to zero
+                                                      //alpha will slowly decrease to zero once the simulation is over
+}
+
+/**
+ * second slider, correspoonds with the strength for the force that drags the nodes together
+ *
+ * @function
+ * @param {simulation} [simulation] [the simulation data returned from initial rendering]
+ * @return - No return
+ */
+function changeStrength( simulation ){                
+  
+  var newStrength;                                    //new strength between nodes
+  var nodeS = simulation.force("charge");             //original node strength
+
+  newStrength = getValue("Two");
+  nodeS.strength(newStrength);
+
+  simulation.restart();                               //reset the timer
+  simulation.alpha(1);                                //restart the simulation, set the alpha value to zero
+                                                      //alpha will slowly decrease to zero once the simulation is over
+}
+
+/**
+ * third slider, correspond with the strength of the primary bond
+ *
+ * @function
+ * @param {simulation} [simulation] [the simulation data returned from initial rendering]
+ * @return - No return
+ */
+function changePrimaryStrength( simulation ){        
+
+  var newStrength;                                    //new strength between nodes
+  var newLink = simulation.force("link")
+
+  newStrength = getValue("Three");
+  newLink.distance(newStrength);
+
+  simulation.restart();                               //reset the timer
+  simulation.alpha(1);                                //restart the simulation, set the alpha value to zero
+                                                      //alpha will slowly decrease to zero once the simulation is over
+}
+
+/**
+ * fourth slider, correspond with the strength of the secondary bond
+ *
+ * @function
+ * @param {simulation} [simulation] [the simulation data returned from initial rendering]
+ * @return - No return
+ */
+function changeSecStrength( simulation ){             
+
+  var newStrength;                                    //new strength between nodes
+  var newLink2 = simulation.force("link2")
+
+  newStrength = getValue("Four");
+  newLink2.distance(newStrength);
+
+  simulation.restart();                               //reset the timer
+  simulation.alpha(1);                                //restart the simulation, set the alpha value to zero
+                                                      //alpha will slowly decrease to zero once the simulation is over
+}
 
 /**
  * Atom class that creates the object of the atom ( refer to object-oriented javascript)
@@ -259,7 +385,7 @@ function createTertiaryList(graph){
         atomMap[source].thirdAtoms.push(atomMap[target].connectedAtoms[j]);
       }
 
-      tracker = 0;
+      tracker = 0;    //reset tracker, be prepared to loop through the next node
     }
 
     for ( var k = 0; k < atomMap[source].connectedAtoms.length; k++){
@@ -275,7 +401,7 @@ function createTertiaryList(graph){
         atomMap[target].thirdAtoms.push(atomMap[source].connectedAtoms[k]);
       }
 
-      tracker2 = 0;
+      tracker2 = 0;   //reset tracker, be prepared to loop through the next node
     }
   }
 } 
@@ -331,92 +457,52 @@ function detectDuplicate(array) {
   }
 }
 
-////////////////////////////////End of Trying to create Secondary bond////////////////////////////////////
-  
+/**
+ * detect if the node is alone. Change the node's alone property accordingly
+ * 
+ * @function
+ * @param {graph} [graph] [the graph of that contains all the elements that will be rendered]
+ * @return - No return
+ */
+function detectAlone(graph){
+  var tracker = 0;
 
-////////////////////////////////////Start of Slider Adjustment////////////////////////////////////////////
-function setInfo( id, value ){                      //print of the message (including the value of the current slider position)
-  document.getElementById(id).innerHTML="current value is : " + value;
+  for ( var i = 0; i < graph.nodes.length; i++){
+    for ( var j = 0; j < graph.links.length; j++){
+      if ( (graph.nodes[i].id === graph.links[j].source) || (graph.nodes[i].id === graph.links[j].target) ){
+        tracker++;
+      }
+    }
+
+    //reset tracker everytime no matter what (assure the next loop could be correct)
+    if( tracker === 1){
+      graph.nodes[i].alone = true;
+      tracker = 0;
+    }else{
+      tracker = 0;
+    }
+  }
+
+  for ( var i = 0; i < graph.nodes.length; i++){
+    for ( var j = 0; j < graph.links.length; j++){
+      if ( graph.links[j].source === graph.nodes[i].id || graph.links[j].target === graph.nodes[i].id ){
+        if ( graph.nodes[i].alone){
+          graph.links[j].alone = true;
+        }
+      }
+    }
+  }
+
 }
 
-function getValue( id ){                             //get the value of the slider
-  return document.getElementById(id).value;
-}
-
-function initSlider( infoId, sliderId ){              //called to display and initial slider
-  setInfo(infoId, getValue(sliderId));
-  document.getElementById(sliderId).addEventListener("change", 
-        function(){                                                         //execute when the slider value changes
-          setInfo(infoId, getValue(sliderId));
-        }, false);
-}
-
-function changeForceCenter( simulation ){             //first slider, corresponds with the node that changes the center of the force
-  var val;                                            //which shifts the structure along y=-x diagonally 
-  var newH;                                           //new height of the center
-  var newW;                                           //new width of the center
-
-  var svg = d3.select("svg"),
-      width = +svg.attr("width"),
-      height = +svg.attr("height");
-
-  val = getValue("One");                              //get value of the slider
-  newW = (width + parseInt(val) );                    //change the width corresponds to the new slider value
-  newH = (height + parseInt(val) );                   //change the height corresponds to the new slider value
-
-  var centerF = simulation.force("center");           //original center force
-  centerF.x(newW/2);
-  centerF.y(newH/2);
-
-  simulation.restart();                               //reset the timer
-  simulation.alpha(1);                                //restart the simulation, set the alpha value to zero
-                                                      //alpha value will slowly decrease to zero once the simulation is finishes
-}
-
-function changeStrength( simulation ){                //second slider, correspoonds with the strength for the force that drags the nodes together
-  
-  var newStrength;                                    //new strength between nodes
-  var nodeS = simulation.force("charge");             //original node strength
-
-  newStrength = getValue("Two");
-  nodeS.strength(newStrength);
-
-  simulation.restart();                               //reset the timer
-  simulation.alpha(1);                                //restart the simulation, set the alpha value to zero
-                                                      //alpha value will slowly decrease to zero once the simulation is finished
-}
-
-function changePrimaryStrength( simulation ){         //third slider, correspond with the strength of the primary bond
-
-  var newStrength;                                    //new strength between nodes
-  var newLink = simulation.force("link")
-
-  newStrength = getValue("Three");
-  newLink.distance(newStrength);
-
-  simulation.restart();                               //reset the timer
-  simulation.alpha(1);                                //restart the simulation, set the alpha value to zero
-                                                      //alpha value will slowly decrease to zero once the simulation is finished
-}
-
-function changeSecStrength( simulation ){             //fourth slider, correspond with the strength of the secondary bond
-
-  var newStrength;                                    //new strength between nodes
-  var newLink2 = simulation.force("link2")
-
-  newStrength = getValue("Four");
-  newLink2.distance(newStrength);
-
-  simulation.restart();                               //reset the timer
-  simulation.alpha(1);                                //restart the simulation, set the alpha value to zero
-                                                      //alpha value will slowly decrease to zero once the simulation is finished
-}
-
-///////////////////////////////////////End of Slider Adjustment/////////////////////////////////////////////////////
-
-
-//////////////////////////////////Start of Displaying /////////////////////////////////////////////////////
-
+/**
+ * Prepare for the graph data. Using NGL library to load the protein data file (including nodes and distance), then 
+ * call correspond functions above the create bond lists and links, elimnate duplicates, add ring property. Finally,
+ * render the graph by using d3.js (force-directed graph) library function
+ * 
+ * @function
+ * @return         - No return
+ */
 function prepareGraph(){
 
   var a, b, c, d;
@@ -439,14 +525,15 @@ function prepareGraph(){
         defaultRepresentation: true
     } ).then( function( comp ){
         comp.addRepresentation( "axes", { scale: 0.3 } );
-        var s = comp.structure.getView( new NGL.Selection( "/0 and not #H" ) );        //only select the first module
-        //console.log( s );
+        var s = comp.structure.getView( new NGL.Selection( "/0 and not #H" ) );     //only select the first module
+        //console.log( s );                                                         //also exclude hydrogen
         console.log( "principal axes", s.getPrincipalAxes() );
         s.eachAtom( function( ap ){
 
             //store all the nodes data to the nodes array in graph
             graph.nodes.push(
-              {id: ap.atomname, group: "1", size: "4", bond: "1", atom: ap.clone(), ring: false, duplicate: "no" } );        
+              {id: ap.atomname, group: "1", size: "4", bond: "1", atom: ap.clone(), ring: false, 
+              alone: false, duplicate: "no" } );        
         } );
         
         //try to add ring property to nodes array
@@ -463,33 +550,46 @@ function prepareGraph(){
          // console.log(bp.clone());
          if( bp.atom1.element==="H" || bp.atom2.element==="H" ) return;
           
-          graph.links.push(                                                 //store all the primary bond data to link array in graph
-            {source: bp.atom1.atomname, target: bp.atom2.atomname, value: "1", bond: "1", distance: bp.atom1.distanceTo(bp.atom2), 
-              atom1: bp.atom1, atom2: bp.atom2, ring: false} 
+          //store all the primary bond data to link array in graph
+          graph.links.push(                                                 
+            {source: bp.atom1.atomname, target: bp.atom2.atomname, value: "1", bond: "1",  
+             distance: bp.atom1.distanceTo(bp.atom2),atom1: bp.atom1, atom2: bp.atom2, ring: false, alone: false} 
             );
-          } );
-    
-          detectDuplicate(graph.links);                            //detect, search and change the duplicate property for primary link
-          atomArrayList(graph);                                    //pass in json file links and create the list of each atom array 
-          createPrimaryList(graph);                                //create the primary link list of the nodes
-          createSecondaryList(graph);                              //create secondary link list that link every other atom together
-          getSecondaryBond(graph);                                 //get the secondary bond and try to display 
-          detectDuplicate(graph.links2);                           //detect, search and change the duplicate property for links2
-          addRingProperty(graph.links2, graph.nodes);              //add ring property to secondary bonds that are inside the ring
+          });
+
+          detectDuplicate(graph.links);                 //detect and change the duplicate property for primary link
+          atomArrayList(graph);                         //pass in links and create the list of each atom array 
+          createPrimaryList(graph);                     //create the primary link list of the nodes
+          createSecondaryList(graph);                   //create secondary link list that link every other atom together
+          getSecondaryBond(graph);                      //get the secondary bond and try to display 
+          detectDuplicate(graph.links2);                //detect, search and change the duplicate property for links2
+          addRingProperty(graph.links2, graph.nodes);   //add ring property to secondary bonds that are inside the ring
           createTertiaryList(graph);
           getTertiaryBond(graph);
-          detectDuplicate(graph.links3);                           //detect, search and change the duplicate property for links3
-          addRingProperty(graph.links3, graph.nodes);              //add ring property to teitary bonds that are inside the ring
-          eliminateBothWay(graph);                                 //delete all the duplicate links ( source and target are the same or opposite)
-          getDistance(graph.links2, graph.nodes);                  //get the distance of the secondary bond and add to the distance property in links2 array
-          getDistance(graph.links3, graph.nodes);
-          addRingProperty(graph.links, graph.nodes);               //add ring property to primary bonds that are inside the ring 
+          detectDuplicate(graph.links3);                 //detect and change the duplicate property for links3
+          addRingProperty(graph.links3, graph.nodes);    //add ring property to teitary bonds that are inside the ring
+          eliminateBothWay(graph);                       //delete all the duplicate links 
 
-          simulation = initRendering( graph );                     //start rendering inside the comp function so we can make sure the file has FINISHED loading
+          detectAlone(graph);
+
+          //get the distance of the secondary bond and add to the distance property in links2 array
+          getDistance(graph.links2, graph.nodes);        
+          getDistance(graph.links3, graph.nodes);
+          addRingProperty(graph.links, graph.nodes);      //add ring property to primary bonds that are inside the ring 
+
+          //start rendering inside the comp function so we can make sure the file has FINISHED loading
+          simulation = initRendering( graph );                     
       } );
   } );   
 }
 
+/**
+ * Create the secondary bond link list that will be stored inside graph.links3 (array)
+ * 
+ * @function
+ * @param  {graph}        - the graph of that contains all the elements that will be rendered 
+ * @return {simulation}   - simulation of the rendering; it will be pssed in to the slider to adjust certain values
+ */
 function initRendering( graph ){
 
   var svg = d3.select("svg"),
@@ -517,28 +617,23 @@ function initRendering( graph ){
                                       }
                                     })
                         .distance(function(d){ 
-                                      // if ( d.ring) {
-                                      //   return d.distance *20;
-                                      // }else{
                                         return d.distance * 50;
                                       }
                            ))
       .force("link", d3.forceLink().id(function(d) { return d.id; })
                         .strength(function(d) { 
                                     if( d.ring ){
-                                      return 3;
-                                    } else{         
+                                      return 2.9;
+                                    }else if (d.alone){
+                                      return 0.95;
+                                    }else{         
                                         return 0.5;
                                     }})
                         .distance(function(d){ 
-                                    // if ( d.ring){
-                                    //   return d.distance * 45;
-                                    // }else{
                                       return d.distance * 15;
                                     }
                         ))
-      .force("charge", d3.forceManyBody().strength(getValue("Two")))                    //feed the value of slider #2 into the strength of the force charge(which 
-                                                                                        //decides whethere to bring nodes closer or further away)
+      .force("charge", d3.forceManyBody().strength(getValue("Two")))                     
       .force("center", d3.forceCenter(width / 2, height / 2));
 
   var link2 = svg.selectAll(".link2")                          //secondary bond force
@@ -598,10 +693,10 @@ function initRendering( graph ){
   simulation.force("link")
       .links(graph.links);  
 
-  simulation.force("link2")                                     //the secondary bond force
+  simulation.force("link2")                                     //secondary bond force
       .links(graph.links2);
 
-  simulation.force("link3")
+  simulation.force("link3")                                     //tertiary bond force
       .links(graph.links3);
 
   function ticked() {
@@ -611,13 +706,13 @@ function initRendering( graph ){
         .attr("x2", function(d) { return d.target.x; })
         .attr("y2", function(d) { return d.target.y; });
 
-    link2.selectAll("line")                                     //display the link for the secondary bond force
+    link2.selectAll("line")                                     //display the link for secondary bond force
         .attr("x1", function(d) { return d.source.x; })
         .attr("y1", function(d) { return d.source.y; })
         .attr("x2", function(d) { return d.target.x; })
         .attr("y2", function(d) { return d.target.y; });
 
-    link3.selectAll("line")
+    link3.selectAll("line")                                     //display the link for tertiary bond force
         .attr("x1", function(d) { return d.source.x; })
         .attr("y1", function(d) { return d.source.y; })
         .attr("x2", function(d) { return d.target.x; })
@@ -646,4 +741,3 @@ function initRendering( graph ){
   return simulation;
 }
 
-//////////////////////////////////End of Displaying /////////////////////////////////////////////////////
