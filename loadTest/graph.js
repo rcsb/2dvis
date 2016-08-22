@@ -504,9 +504,16 @@ function detectAlone(graph){
  * @return         - No return
  */
 function prepareGraph(){
+  var svg = d3.select("svg"),
+      width = +svg.attr("width"),
+      height = +svg.attr("height");
 
+  var xV = 0;
+  var yV = 0;
   var a, b, c, d;
   var z = false;
+
+
   var graph = {
     "nodes": [
     ],
@@ -519,23 +526,98 @@ function prepareGraph(){
     atomMap: {}
   };
 
+
   document.addEventListener( "DOMContentLoaded", function(){
     stage = new NGL.Stage( "viewport" );
     stage.loadFile( "http://files.rcsb.org/ligands/download/RET.cif", {
-        defaultRepresentation: true
+        defaultRepresentation: false,
+        sele: "/0"
     } ).then( function( comp ){
-        comp.addRepresentation( "axes", { scale: 0.3 } );
+        comp.addRepresentation( "ball+stick", { sele: "not #H" } );
+        comp.addRepresentation( "axes", { sele: "/0 and not #H", scale: 0.3 } );
+        stage.centerView();
         var s = comp.structure.getView( new NGL.Selection( "/0 and not #H" ) );     //only select the first module
-        //console.log( s );                                                         //also exclude hydrogen
-        console.log( "principal axes", s.getPrincipalAxes() );
+        console.log( s );                                                         //also exclude hydrogen
+        //console.log( "principal axes", s.getPrincipalAxes() );
+
+        var principleAxes = s.getPrincipalAxes();
+        var axisLine = principleAxes[ 2 ];
+        var normal = new NGL.Vector3().subVectors( axisLine[ 0 ], axisLine[ 1 ] ).normalize();
+
+        //I have no idea what I am doing, just following what Alex has done before
+        //PLEASE, I NEED HELP :< :((((
+        //SOMEONE SAVE ME! I am DUMB
+        var av = new NGL.Vector3( normal.y, (-normal.x), 0);
+        var bv = new NGL.Vector3().crossVectors( normal, av );
+
+        var plane = new NGL.Plane(normal);
+        var tempV = new NGL.Vector3();      //store the coordinates of the nodes
+
+        var aaaa = 0;
+        var bbbb = 0;
+        var i0;
+
         s.eachAtom( function( ap ){
+
+          tempV.copy( ap );
+          //console.log( ap.x);
+          aaaa = ( plane.projectPoint(tempV)).dot( av );
+          bbbb = ( plane.projectPoint(tempV)).dot( bv ); 
 
             //store all the nodes data to the nodes array in graph
             graph.nodes.push(
               {id: ap.atomname, group: "1", size: "4", bond: "1", atom: ap.clone(), ring: false, 
-              alone: false, duplicate: "no" } );        
+              alone: false, duplicate: "no", element: (ap.atomname).substring(0,1), fx: 0,
+              fy: 0 });   
         } );
-        
+
+        for ( var i = 0; i < graph.nodes.length; i++){
+          aaaa = ( plane.projectPoint(tempV.copy( graph.nodes[i].atom ))).dot( av );
+          bbbb = ( plane.projectPoint(tempV.copy( graph.nodes[i].atom ))).dot( bv ); 
+          i0 = new NGL.Vector3(aaaa, bbbb, 0);
+
+          xV += i0.x;
+          yV += i0.y;
+
+          // xV += plane.projectPoint(tempV.copy( graph.nodes[i].atom )).x;
+          // yV += plane.projectPoint(tempV.copy( graph.nodes[i].atom )).y;
+         
+          // xV = (graph.nodes[i].atom.x) + xV;
+          // yV = (graph.nodes[i].atom.y) + yV;
+        }
+
+        xV = xV / graph.nodes.length;
+        yV = yV / graph.nodes.length;
+
+        for ( var i = 0; i < graph.nodes.length; i++){
+          aaaa = ( plane.projectPoint(tempV.copy( graph.nodes[i].atom ))).dot( av );
+          bbbb = ( plane.projectPoint(tempV.copy( graph.nodes[i].atom ))).dot( bv ); 
+          i0 = new NGL.Vector3(aaaa, bbbb, 0);
+
+          graph.nodes[i].fx = ( (i0.x - xV) * 60) + (width/2);
+          graph.nodes[i].fy = ( (i0.y - yV) * 60) + (height/2); 
+
+          // var tempV2 = new NGL.Vector3( graph.nodes[i].atom.x, graph.nodes[i].atom.y, graph.nodes[i].atom.z);
+
+          // console.log(tempV2);
+          // var projected = plane.projectPoint(tempV2);
+
+          // var xCor = projected.x;
+          // var yCor = projected.y;
+
+          // graph.nodes[i].fx = ( ((xCor) - xV) * 30) + (width/2);
+          // graph.nodes[i].fy = ( ((yCor) - yV) * 30) + (height/2); 
+
+            console.log( graph.nodes[i].fx, graph.nodes[i].fy);
+
+          // console.log( graph.nodes[i].fx, graph.nodes[i].fy, graph.nodes[i].id, 
+          //   (tempV.copy( graph.nodes[i].atom )).x, (tempV.copy( graph.nodes[i].atom )).y );
+
+          // graph.nodes[i].fx = ( (graph.nodes[i].atom.x - xV) * 30) + (width/2);
+          // graph.nodes[i].fy = ( (graph.nodes[i].atom.y - yV) * 30) + (height/2); 
+          //console.log((graph.nodes[i].atom.x - xV), (graph.nodes[i].atom.y - yV), graph.nodes[i].id);
+        }
+
         //try to add ring property to nodes array
         for ( var i = 0; i < graph.nodes.length; i++){
           if ( (graph.nodes[i].id === "C6") || (graph.nodes[i].id === "C1") || (graph.nodes[i].id === "C2") || 
@@ -548,11 +630,11 @@ function prepareGraph(){
         s.eachBond( function( bp ){
 
          // console.log(bp.clone());
-         if( bp.atom1.element==="H" || bp.atom2.element==="H" ) return;
+        if( bp.atom1.element==="H" || bp.atom2.element==="H" ) return;
           
           //store all the primary bond data to link array in graph
           graph.links.push(                                                 
-            {source: bp.atom1.atomname, target: bp.atom2.atomname, value: "1", bond: "1",  
+            {source: bp.atom1.atomname, target: bp.atom2.atomname, value: "1", bond: bp.bondOrder,  
              distance: bp.atom1.distanceTo(bp.atom2),atom1: bp.atom1, atom2: bp.atom2, ring: false, alone: false} 
             );
           });
@@ -577,8 +659,14 @@ function prepareGraph(){
           getDistance(graph.links3, graph.nodes);
           addRingProperty(graph.links, graph.nodes);      //add ring property to primary bonds that are inside the ring 
 
+          // Triple Bond Test From C9-C10
+          // graph.links[12].bond = 3;
+          var renderingVal = initRendering(graph);
           //start rendering inside the comp function so we can make sure the file has FINISHED loading
-          simulation = initRendering( graph );                     
+          simulation = renderingVal[0];
+          displaySecondary = renderingVal[1];
+          displayTertiary = renderingVal[2];  
+          console.log(simulation);     
       } );
   } );   
 }
@@ -592,6 +680,7 @@ function prepareGraph(){
  */
 function initRendering( graph ){
 
+  var barObject = new Object();
   var svg = d3.select("svg"),
       width = +svg.attr("width"),
       height = +svg.attr("height");
@@ -600,54 +689,88 @@ function initRendering( graph ){
       .force("link3", d3.forceLink().id(function(d) { return d.id; })
                        .strength( function (d){
                                     if ( d.ring ){
-                                      return 1.5;
+                                      return 2.5;
                                     }else{
-                                      return 2;
+                                      return 3;
                                     }
-
                        })
                        .distance(function(d) { return d.distance * 50 ;})
                          )
       .force("link2", d3.forceLink().id(function(d) { return d.id; })                  //secondary bond force
                         .strength( function (d) {
                                       if ( d.ring) {
-                                        return 1.5;
+                                        return 2.2;
                                       }else{
                                         return 2;
                                       }
                                     })
                         .distance(function(d){ 
+                                      if ( d.ring){
                                         return d.distance * 50;
+                                      }else{
+                                        return d.distance * 50;
+                                      }
                                       }
                            ))
       .force("link", d3.forceLink().id(function(d) { return d.id; })
                         .strength(function(d) { 
                                     if( d.ring ){
-                                      return 2.9;
+                                      return 5;
                                     }else if (d.alone){
-                                      return 0.95;
+                                      return 0.8;
                                     }else{         
                                         return 0.5;
                                     }})
                         .distance(function(d){ 
+                                    if ( d.ring ){
                                       return d.distance * 15;
-                                    }
+                                    }else{
+                                      return d.distance * 15
+                                     }
+                                  }
                         ))
       .force("charge", d3.forceManyBody().strength(getValue("Two")))                     
-      .force("center", d3.forceCenter(width / 2, height / 2));
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .alpha(0.5);
 
   var link2 = svg.selectAll(".link2")                          //secondary bond force
       .data(graph.links2)
-      .enter().append("g")
-      .attr("class", "link2");
+      .enter().append("g");
+
+  /**
+   * Decides to display the secondary bond
+   * 
+   * @function
+   */
+  function displaySecondary(){
+    var barValue = getValue("bar1");
+    if ( barValue === "FALSE" ){
+      link2.attr("class", "link2 foo");     //display secondary bond
+    }else{
+      link2.attr("class", "link2");         //hide secondary bond
+    }
+  }
 
   link2.append("line")
       .style("stroke-width", function(d) { return (d.bond * 2 - 1) * 2 + "px"; });
 
   var link3 = svg.selectAll(".link3")                          //secondary bond force
       .data(graph.links3)
-      .enter().append("g")
-      .attr("class", "link3");
+      .enter().append("g");
+      
+  /**
+   * Decides to display the Tertiary bond
+   * 
+   * @function
+   */
+  function displayTertiary(){
+    var barValue = getValue("bar2");
+    if ( barValue === "FALSE" ){
+      link3.attr("class", "link3 foo2");     //display secondary bond
+    }else{
+      link3.attr("class", "link3");         //hide secondary bond
+    }
+  }
 
   link3.append("line")
       .style("stroke-width", function(d) { return (d.bond * 2 - 1) * 2 + "px"; });
@@ -665,8 +788,15 @@ function initRendering( graph ){
   link.append("line")
       .style("stroke-width", function(d) { return (d.bond * 2 - 1) * 2 + "px"; });
 
-  link.filter(function(d) { return d.bond > 1; }).append("line")
+  link.filter(function(d) { return (d.bond > 1 && d.bond < 3); }).append("line")
       .attr("class", "separator");
+
+  // link.filter(function(d) { return d.bond > 2; }).append("line")   //for triple bond
+  //     .attr("class", "separator2");
+
+
+  // link.filter(function(d) { return d.bond > 2; }).append("line")    //for triple bond
+  //     .attr("class", "separator3");
 
   var node = svg.selectAll(".node")
       .data(graph.nodes)
@@ -679,7 +809,7 @@ function initRendering( graph ){
 
   node.append("circle")
       .attr("r", function(d) { return radius(d.size); })
-      .style("fill", function(d) { return color(d.color); });
+      .style("fill", function(d) { return color(d.element.color); });
 
   node.append("text")               //show the text value
       .attr("dy", ".35em")
@@ -699,7 +829,15 @@ function initRendering( graph ){
   simulation.force("link3")                                     //tertiary bond force
       .links(graph.links3);
 
+
   function ticked() {
+
+    //delete the fx and fy property ( hence, unfix the intial position)
+    for ( var i = 0; i < graph.nodes.length; i++){
+      delete graph.nodes[i].fx;
+      delete graph.nodes[i].fy;
+    }
+
     link.selectAll("line")
         .attr("x1", function(d) { return d.source.x; })
         .attr("y1", function(d) { return d.source.y; })
@@ -719,6 +857,8 @@ function initRendering( graph ){
         .attr("y2", function(d) { return d.target.y; });
 
     node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+
+    // simulation.stop();
   }
 
   function dragstarted(d) {
@@ -738,6 +878,7 @@ function initRendering( graph ){
     d.fy = null;
   }
 
-  return simulation;
+  return [simulation, displaySecondary, displayTertiary];
 }
+
 
