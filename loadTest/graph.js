@@ -1,7 +1,7 @@
 /** 
  *  FileName: graph.js
  *  Start: July 5th
- *  Last Modified: Aug 12th
+ *  Last Modified: Aug 22th
  *  Purpose: Testing, Understanding D3, event listener, javascript
  */
 
@@ -253,7 +253,8 @@ function getSecondaryBond(graph){
       //push every secondary bond into the .json file (in order for it be accessed and use to display the link 
       //by using d3 function)                          
       graph.links2.push( 
-        {source: id, target: element.name, value: "1", bond: "1", duplicate: "no", distance: 0, ring: false} );       
+        {source: id, target: element.name, value: "1", bond: "1", duplicate: "no", 
+          distance: 0, ring: false, alone:false} );       
     }                                                               
   }
 }
@@ -421,7 +422,8 @@ function getTertiaryBond(graph){
     for ( var j=0; j<atomMap[id].thirdAtoms.length; j++){                     
       var element = atomMap[id].thirdAtoms[j];                                
       graph.links3.push( 
-        {source: id, target: element.name, value: "1", bond: "1", duplicate: "no", distance: 0, ring: false} );         
+        {source: id, target: element.name, value: "1", bond: "1", duplicate: "no", 
+         distance: 0, ring: false, alone: false} );         
     }                                                                      
   } 
 }
@@ -464,30 +466,30 @@ function detectDuplicate(array) {
  * @param {graph} [graph] [the graph of that contains all the elements that will be rendered]
  * @return - No return
  */
-function detectAlone(graph){
+function detectAlone(array1, array2){
   var tracker = 0;
 
-  for ( var i = 0; i < graph.nodes.length; i++){
-    for ( var j = 0; j < graph.links.length; j++){
-      if ( (graph.nodes[i].id === graph.links[j].source) || (graph.nodes[i].id === graph.links[j].target) ){
+  for ( var i = 0; i < array2.length; i++){
+    for ( var j = 0; j < array1.length; j++){
+      if ( (array2[i].id === array1[j].source) || (array2[i].id === array1[j].target) ){
         tracker++;
       }
     }
 
     //reset tracker everytime no matter what (assure the next loop could be correct)
     if( tracker === 1){
-      graph.nodes[i].alone = true;
+      array2[i].alone = true;
       tracker = 0;
     }else{
       tracker = 0;
     }
   }
 
-  for ( var i = 0; i < graph.nodes.length; i++){
-    for ( var j = 0; j < graph.links.length; j++){
-      if ( graph.links[j].source === graph.nodes[i].id || graph.links[j].target === graph.nodes[i].id ){
-        if ( graph.nodes[i].alone){
-          graph.links[j].alone = true;
+  for ( var i = 0; i < array2.length; i++){
+    for ( var j = 0; j < array1.length; j++){
+      if ( array1[j].source === array2[i].id || array1[j].target === array2[i].id ){
+        if ( array2[i].alone){
+            array1[j].alone = true;          
         }
       }
     }
@@ -508,11 +510,14 @@ function prepareGraph(){
       width = +svg.attr("width"),
       height = +svg.attr("height");
 
+  var crystalTerD = 0;
+  var crystalSecD = 0;
+  var trackerForCrystalSec = 0;
+
   var xV = 0;
   var yV = 0;
   var a, b, c, d;
   var z = false;
-
 
   var graph = {
     "nodes": [
@@ -526,18 +531,21 @@ function prepareGraph(){
     atomMap: {}
   };
 
-
   document.addEventListener( "DOMContentLoaded", function(){
     stage = new NGL.Stage( "viewport" );
     stage.loadFile( "http://files.rcsb.org/ligands/download/RET.cif", {
         defaultRepresentation: false,
         sele: "/0"
     } ).then( function( comp ){
-        comp.addRepresentation( "ball+stick", { sele: "not #H" } );
-        comp.addRepresentation( "axes", { sele: "/0 and not #H", scale: 0.3 } );
+        comp.addRepresentation( "ball+stick", { sele: "not #H", multipleBond: true } );
+        comp.addRepresentation( "label", {
+          sele: "not #H", labelType: "atomname", color: "white", radius: 0.7,
+          xOffset: -0.3, yOffset: -0.3
+        } );
+       // comp.addRepresentation( "axes", { sele: "/0 and not #H", scale: 0.3 } );
         stage.centerView();
         var s = comp.structure.getView( new NGL.Selection( "/0 and not #H" ) );     //only select the first module
-        console.log( s );                                                         //also exclude hydrogen
+        //console.log( s );                                                         //also exclude hydrogen
         //console.log( "principal axes", s.getPrincipalAxes() );
 
         var principleAxes = s.getPrincipalAxes();
@@ -547,8 +555,8 @@ function prepareGraph(){
         //I have no idea what I am doing, just following what Alex has done before
         //PLEASE, I NEED HELP :< :((((
         //SOMEONE SAVE ME! I am DUMB
-        var av = new NGL.Vector3( normal.y, (-normal.x), 0);
-        var bv = new NGL.Vector3().crossVectors( normal, av );
+        var av = new NGL.Vector3( normal.y, (-normal.x), 0);      //create the perpendicular vector on the normal
+        var bv = new NGL.Vector3().crossVectors( normal, av );    //orthogonoal to av and normal vector
 
         var plane = new NGL.Plane(normal);
         var tempV = new NGL.Vector3();      //store the coordinates of the nodes
@@ -581,7 +589,6 @@ function prepareGraph(){
 
           // xV += plane.projectPoint(tempV.copy( graph.nodes[i].atom )).x;
           // yV += plane.projectPoint(tempV.copy( graph.nodes[i].atom )).y;
-         
           // xV = (graph.nodes[i].atom.x) + xV;
           // yV = (graph.nodes[i].atom.y) + yV;
         }
@@ -597,25 +604,15 @@ function prepareGraph(){
           graph.nodes[i].fx = ( (i0.x - xV) * 60) + (width/2);
           graph.nodes[i].fy = ( (i0.y - yV) * 60) + (height/2); 
 
-          // var tempV2 = new NGL.Vector3( graph.nodes[i].atom.x, graph.nodes[i].atom.y, graph.nodes[i].atom.z);
-
-          // console.log(tempV2);
           // var projected = plane.projectPoint(tempV2);
 
           // var xCor = projected.x;
           // var yCor = projected.y;
 
-          // graph.nodes[i].fx = ( ((xCor) - xV) * 30) + (width/2);
-          // graph.nodes[i].fy = ( ((yCor) - yV) * 30) + (height/2); 
-
-            console.log( graph.nodes[i].fx, graph.nodes[i].fy);
-
-          // console.log( graph.nodes[i].fx, graph.nodes[i].fy, graph.nodes[i].id, 
-          //   (tempV.copy( graph.nodes[i].atom )).x, (tempV.copy( graph.nodes[i].atom )).y );
+          //console.log( graph.nodes[i].fx, graph.nodes[i].fy);
 
           // graph.nodes[i].fx = ( (graph.nodes[i].atom.x - xV) * 30) + (width/2);
           // graph.nodes[i].fy = ( (graph.nodes[i].atom.y - yV) * 30) + (height/2); 
-          //console.log((graph.nodes[i].atom.x - xV), (graph.nodes[i].atom.y - yV), graph.nodes[i].id);
         }
 
         //try to add ring property to nodes array
@@ -652,16 +649,42 @@ function prepareGraph(){
           addRingProperty(graph.links3, graph.nodes);    //add ring property to teitary bonds that are inside the ring
           eliminateBothWay(graph);                       //delete all the duplicate links 
 
-          detectAlone(graph);
+          detectAlone(graph.links, graph.nodes);
+          detectAlone(graph.links2, graph.nodes);
+          detectAlone(graph.links3, graph.nodes);
 
           //get the distance of the secondary bond and add to the distance property in links2 array
           getDistance(graph.links2, graph.nodes);        
-          getDistance(graph.links3, graph.nodes);
-          addRingProperty(graph.links, graph.nodes);      //add ring property to primary bonds that are inside the ring 
 
-          // Triple Bond Test From C9-C10
-          // graph.links[12].bond = 3;
+          // try to make the secondary bond distance inside the ring equal
+          for ( var i = 0; i < graph.links2.length; i++){
+            if ( graph.links2[i].ring ){            
+              crystalSecD += graph.links2[i].distance;            
+              trackerForCrystalSec++;
+            }
+          }
+          crystalSecD = crystalSecD / trackerForCrystalSec;
+
+          for ( var j = 0; j < graph.links2.length; j++){
+            if ( graph.links2[j].ring){
+              graph.links2[j].distance = crystalSecD;
+            }
+          }
+
+          getDistance(graph.links3, graph.nodes);
+
+          // try to make the tertiary bond distance inside the ring equal
+          crystalTerD = (graph.links3[0].distance + graph.links3[1].distance + graph.links3[2].distance)/3;
+          graph.links3[0].distance = crystalTerD;
+          graph.links3[1].distance = crystalTerD;
+          graph.links3[2].distance = crystalTerD;
+
+
+          addRingProperty(graph.links, graph.nodes);      //add ring property to primary bonds that are inside the ring 
+          console.log(graph);
+
           var renderingVal = initRendering(graph);
+
           //start rendering inside the comp function so we can make sure the file has FINISHED loading
           simulation = renderingVal[0];
           displaySecondary = renderingVal[1];
@@ -687,48 +710,47 @@ function initRendering( graph ){
 
   var simulation = d3.forceSimulation()
       .force("link3", d3.forceLink().id(function(d) { return d.id; })
-                       .strength( function (d){
+                       .strength(function(d){
                                     if ( d.ring ){
-                                      return 2.5;
-                                    }else{
-                                      return 3;
+                                      return 5;
                                     }
-                       })
-                       .distance(function(d) { return d.distance * 50 ;})
-                         )
+                                    else if ( d.alone){
+                                      return 2.5;
+                                    }
+                                    else{
+                                      return 3;
+                                    }})
+                       .distance(function(d) { 
+                                    return d.distance * 55 ;
+                                  }))
       .force("link2", d3.forceLink().id(function(d) { return d.id; })                  //secondary bond force
-                        .strength( function (d) {
+                        .strength(function(d) {
                                       if ( d.ring) {
-                                        return 2.2;
-                                      }else{
+                                        return 5;
+                                      }
+                                      else if ( d.alone){
+                                        return 2.5;
+                                      }
+                                      else{
                                         return 2;
-                                      }
-                                    })
+                                      }})
                         .distance(function(d){ 
-                                      if ( d.ring){
-                                        return d.distance * 50;
-                                      }else{
-                                        return d.distance * 50;
-                                      }
-                                      }
-                           ))
+                                    return d.distance * 50;
+                                  }))
       .force("link", d3.forceLink().id(function(d) { return d.id; })
                         .strength(function(d) { 
                                     if( d.ring ){
                                       return 5;
-                                    }else if (d.alone){
-                                      return 0.8;
-                                    }else{         
+                                    }
+                                    else if (d.alone){
+                                      return 1;
+                                    }
+                                    else{         
                                         return 0.5;
                                     }})
                         .distance(function(d){ 
-                                    if ( d.ring ){
-                                      return d.distance * 15;
-                                    }else{
-                                      return d.distance * 15
-                                     }
-                                  }
-                        ))
+                                    return d.distance * 25;
+                                  }))
       .force("charge", d3.forceManyBody().strength(getValue("Two")))                     
       .force("center", d3.forceCenter(width / 2, height / 2))
       .alpha(0.5);
@@ -757,7 +779,7 @@ function initRendering( graph ){
   var link3 = svg.selectAll(".link3")                          //secondary bond force
       .data(graph.links3)
       .enter().append("g");
-      
+
   /**
    * Decides to display the Tertiary bond
    * 
@@ -790,13 +812,6 @@ function initRendering( graph ){
 
   link.filter(function(d) { return (d.bond > 1 && d.bond < 3); }).append("line")
       .attr("class", "separator");
-
-  // link.filter(function(d) { return d.bond > 2; }).append("line")   //for triple bond
-  //     .attr("class", "separator2");
-
-
-  // link.filter(function(d) { return d.bond > 2; }).append("line")    //for triple bond
-  //     .attr("class", "separator3");
 
   var node = svg.selectAll(".node")
       .data(graph.nodes)
@@ -880,5 +895,4 @@ function initRendering( graph ){
 
   return [simulation, displaySecondary, displayTertiary];
 }
-
 
