@@ -232,121 +232,6 @@ function createSecondaryList(graph){
 }
 
 /**
- * Create the secondary bond link list that will be stored inside graph.links2 (array)
- * 
- * @function
- * @param  {graph} - the graph of that contains all the elements that will be rendered 
- * @return         - No return
- */
-function getSecondaryBond(graph){ 
-  var atomMap = graph.atomMap;
-  var totalNumAtom = graph.nodes.length;
-  for ( var i=0; i<totalNumAtom; i++){                               //loop through every node in the data file
-    var id = graph.nodes[i].id;                                      //get the name of the node ( which is node.id)   
-
-    //for each node, loop through all the secondary bond correspond with this node
-    for ( var j=0; j<atomMap[id].secAtoms.length; j++){ 
-
-      //"element" represents atom object ( which is the target of the secondary bond )                    
-      var element = atomMap[id].secAtoms[j];  
-
-      //push every secondary bond into the .json file (in order for it be accessed and use to display the link 
-      //by using d3 function)                          
-      graph.links2.push( 
-        {source: id, target: element.name, value: "1", bond: "1", duplicate: "no", 
-          distance: 0, ring: false, alone:false} );       
-    }                                                               
-  }
-}
-
-/**
- * change the ring property to links2 and links3 based on the node's own ring property in the nodes 
- * array inside graph.
- * For each link, loop through the nodes array and check if both target and source has the same ring properties 
- * and change the value of the ring property of that link accordingly
- * 
- * @function
- * @param  {array} [array1] - the array that needs to change the ring property 
- * @param  {array} [array2] - the nodes array inside graph ( to be compared and check the value of ring property)
- * @return         - No return
- */
-function addRingProperty(array1, array2){
-  //add the diffenet ring property based on the node
-  for ( var i = 0; i < array1.length; i++){ 
-    for ( var j = 0; j < array2.length; j++){
-      if ( array1[i].source === array2[j].id ){
-        if ( array2[j].ring){
-          for ( var k = 0; k < array2.length; k++){
-            if ( array1[i].target === array2[k].id ){
-              if ( array2[k].ring){
-                array1[i].ring = true;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-/**
- * eliminate any duplicate elements inside the array based on the property's (duplicate: false) value
- * 
- * @function
- * @param  {graph} - the graph of that contains all the elements that will be rendered 
- * @return         - No return
- */
-function eliminateBothWay(graph){
-  for ( var i = 0; i < graph.links.length; i++){
-    if ( graph.links[i].duplicate == "yes"){
-      graph.links.splice(i,1);    //delete that element
-      i--;                        //decrement the index so index still remains correct
-    }
-  }
-
-  for ( var i = 0; i < graph.links2.length; i++){
-    if ( graph.links2[i].duplicate == "yes"){
-      graph.links2.splice(i,1);
-      i--;
-    }
-  }
-
-  for ( var i = 0; i < graph.links3.length; i++){
-    if ( graph.links3[i].duplicate == "yes"){
-      graph.links3.splice(i,1);
-      i--;
-    }
-  }
-}
-
-/**
- * get the distance betweeens nodes for non-primary bonds
- * 
- * @function
- * @param  {array} [array1] - the array that needs to change the ring property 
- * @param  {array} [array2] - the nodes array inside graph ( to be compared and check the value of ring property)
- * @return         - No return
- */
-function getDistance(array1, array2){              
-
-  //loop through all possible nodes and get the name
-  for ( var i=0; i<array2.length; i++){              
-    var id = array2[i].id;                                             
-    for ( var j=0; j<array1.length; j++){           //loop through all links and compare name 
-      if ( id === array1[j].source){                //if source matches, then follow the same process and find target
-        for ( var k = 0; k<array2.length; k++){
-          if ( array2[k].id === array1[j].target){ 
-
-            //if target is found, then calculate the distance by using distanceTo( NGL function for atom object(NGL) )  
-            array1[j].distance = array2[i].atom.distanceTo(array2[k].atom);
-          }
-        }
-      }
-    }                                                                
-  }
-}
-
-/**
  * Create the tertiary bond list and push the nodes elements into the correspond atom object
  * 
  * @function
@@ -408,6 +293,34 @@ function createTertiaryList(graph){
 } 
 
 /**
+ * Create the secondary bond link list that will be stored inside graph.links2 (array)
+ * 
+ * @function
+ * @param  {graph} - the graph of that contains all the elements that will be rendered 
+ * @return         - No return
+ */
+function getSecondaryBond(graph){ 
+  var atomMap = graph.atomMap;
+  var totalNumAtom = graph.nodes.length;
+  for ( var i=0; i<totalNumAtom; i++){                               //loop through every node in the data file
+    var id = graph.nodes[i].id;                                      //get the name of the node ( which is node.id)   
+
+    //for each node, loop through all the secondary bond correspond with this node
+    for ( var j=0; j<atomMap[id].secAtoms.length; j++){ 
+
+      //"element" represents atom object ( which is the target of the secondary bond )                    
+      var element = atomMap[id].secAtoms[j];  
+
+      //push every secondary bond into the .json file (in order for it be accessed and use to display the link 
+      //by using d3 function)                          
+      graph.links2.push( 
+        {source: id, target: element.name, value: "1", bond: "1", duplicate: "no", 
+          distance: 0, ring: false, alone:false} );       
+    }                                                               
+  }
+}
+
+/**
  * Create the secondary bond link list that will be stored inside graph.links3 (array)
  * 
  * @function
@@ -426,6 +339,102 @@ function getTertiaryBond(graph){
          distance: 0, ring: false, alone: false} );         
     }                                                                      
   } 
+}
+
+// function getBond(list, array1, array2){
+//   var atomMap = list;
+//   var totalNumAtom = array1.length;
+//   for ( var i=0; i<totalNumAtom; i++){                               //loop through every node in the data file
+//     var id = array1[i].id;                                      //get the name of the node ( which is node.id)   
+
+//     //for each node, loop through all the secondary bond correspond with this node
+//     for ( var j=0; j<atomMap[id].secAtoms.length; j++){ 
+
+//       //"element" represents atom object ( which is the target of the secondary bond )                    
+//       var element = atomMap[id].secAtoms[j];  
+
+//       //push every secondary bond into the .json file (in order for it be accessed and use to display the link 
+//       //by using d3 function)                          
+//       array2.push( 
+//         {source: id, target: element.name, value: "1", bond: "1", duplicate: "no", 
+//           distance: 0, ring: false, alone:false} );       
+//     }                                                               
+//   }
+// }
+
+/**
+ * change the ring property to links2 and links3 based on the node's own ring property in the nodes 
+ * array inside graph.
+ * For each link, loop through the nodes array and check if both target and source has the same ring properties 
+ * and change the value of the ring property of that link accordingly
+ * 
+ * @function
+ * @param  {array} [array1] - the array that needs to change the ring property 
+ * @param  {array} [array2] - the nodes array inside graph ( to be compared and check the value of ring property)
+ * @return         - No return
+ */
+function addRingProperty(array1, array2){
+  //add the diffenet ring property based on the node
+  for ( var i = 0; i < array1.length; i++){ 
+    for ( var j = 0; j < array2.length; j++){
+      if ( array1[i].source === array2[j].id ){
+        if ( array2[j].ring){
+          for ( var k = 0; k < array2.length; k++){
+            if ( array1[i].target === array2[k].id ){
+              if ( array2[k].ring){
+                array1[i].ring = true;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * eliminate any duplicate elements inside the array based on the property's (duplicate: false) value
+ * 
+ * @function
+ * @param  {graph} - the graph of that contains all the elements that will be rendered 
+ * @return         - No return
+ */
+function eliminateBothWay(array){
+  for ( var i = 0; i < array.length; i++){
+    if ( array[i].duplicate == "yes"){
+      array.splice(i,1);    //delete that element
+      i--;                  //decrement the index so index still remains correct
+    }
+  }
+
+  return array;
+}
+
+/**
+ * get the distance betweeens nodes for non-primary bonds
+ * 
+ * @function
+ * @param  {array} [array1] - the array that needs to change the ring property 
+ * @param  {array} [array2] - the nodes array inside graph ( to be compared and check the value of ring property)
+ * @return         - No return
+ */
+function getDistance(array1, array2){              
+
+  //loop through all possible nodes and get the name
+  for ( var i=0; i<array2.length; i++){              
+    var id = array2[i].id;                                             
+    for ( var j=0; j<array1.length; j++){           //loop through all links and compare name 
+      if ( id === array1[j].source){                //if source matches, then follow the same process and find target
+        for ( var k = 0; k<array2.length; k++){
+          if ( array2[k].id === array1[j].target){ 
+
+            //if target is found, then calculate the distance by using distanceTo( NGL function for atom object(NGL) )  
+            array1[j].distance = array2[i].atom.distanceTo(array2[k].atom);
+          }
+        }
+      }
+    }                                                                
+  }
 }
 
 /**
@@ -604,8 +613,6 @@ function prepareGraph(){
           graph.nodes[i].fx = ( (i0.x - xV) * 60) + (width/2);
           graph.nodes[i].fy = ( (i0.y - yV) * 60) + (height/2); 
 
-          // var projected = plane.projectPoint(tempV2);
-
           // var xCor = projected.x;
           // var yCor = projected.y;
 
@@ -640,14 +647,18 @@ function prepareGraph(){
           atomArrayList(graph);                         //pass in links and create the list of each atom array 
           createPrimaryList(graph);                     //create the primary link list of the nodes
           createSecondaryList(graph);                   //create secondary link list that link every other atom together
-          getSecondaryBond(graph);                      //get the secondary bond and try to display 
+          getSecondaryBond(graph);                       
+          //getBond(graph.atomMap, graph.nodes, graph.links2);  //get the secondary bond and try to display
           detectDuplicate(graph.links2);                //detect, search and change the duplicate property for links2
           addRingProperty(graph.links2, graph.nodes);   //add ring property to secondary bonds that are inside the ring
           createTertiaryList(graph);
           getTertiaryBond(graph);
           detectDuplicate(graph.links3);                 //detect and change the duplicate property for links3
           addRingProperty(graph.links3, graph.nodes);    //add ring property to teitary bonds that are inside the ring
-          eliminateBothWay(graph);                       //delete all the duplicate links 
+          eliminateBothWay(graph.links);                 //delete all both ways links in primary link
+          eliminateBothWay(graph.links2);                //delete all both ways links in secondary link
+          eliminateBothWay(graph.links3);                //delete all both ways links in tertiary link
+          
 
           detectAlone(graph.links, graph.nodes);
           detectAlone(graph.links2, graph.nodes);
@@ -679,9 +690,7 @@ function prepareGraph(){
           graph.links3[1].distance = crystalTerD;
           graph.links3[2].distance = crystalTerD;
 
-
           addRingProperty(graph.links, graph.nodes);      //add ring property to primary bonds that are inside the ring 
-          console.log(graph);
 
           var renderingVal = initRendering(graph);
 
@@ -689,7 +698,6 @@ function prepareGraph(){
           simulation = renderingVal[0];
           displaySecondary = renderingVal[1];
           displayTertiary = renderingVal[2];  
-          console.log(simulation);     
       } );
   } );   
 }
@@ -702,6 +710,8 @@ function prepareGraph(){
  * @return {simulation}   - simulation of the rendering; it will be pssed in to the slider to adjust certain values
  */
 function initRendering( graph ){
+
+  console.log(graph);
 
   var barObject = new Object();
   var svg = d3.select("svg"),
@@ -846,7 +856,6 @@ function initRendering( graph ){
 
 
   function ticked() {
-
     //delete the fx and fy property ( hence, unfix the intial position)
     for ( var i = 0; i < graph.nodes.length; i++){
       delete graph.nodes[i].fx;
