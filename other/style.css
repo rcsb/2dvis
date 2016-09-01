@@ -1,0 +1,58 @@
+/*comment style
+*/
+
+.ForceCenterSlider{
+	width: 200px;
+}
+
+.link line {
+  stroke-width: 2px;
+  stroke: #aaa;
+}
+
+.node circle {
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.link line.separator {
+  stroke: #fff;      /*color white*/
+  stroke-width: 2px;
+}
+
+/*triple bond test
+*/
+/*.link line.separator2 {
+  stroke: #fff;
+  stroke-width: 6px;
+}
+
+.link line.separator3 {
+  stroke: #aaa;
+  stroke-width: 2px;
+}*/
+
+.node text {
+  font: 10px sans-serif;
+  pointer-events: none;
+}
+
+.link2 line {
+	stroke-width: 2px;
+  	stroke: #fff;    /*color white*/
+}
+
+.foo line {
+  stroke-width: 2px;
+  stroke: #faa;    /*color white*/
+}
+
+.link3 line {
+  stroke-width: 2px;
+  stroke: #fff;      /*color white*/
+}
+
+.foo2 line {
+  stroke-width: 2px;
+  stroke: #3399ff;
+}
