@@ -341,27 +341,6 @@ function getTertiaryBond(graph){
   } 
 }
 
-// function getBond(list, array1, array2){
-//   var atomMap = list;
-//   var totalNumAtom = array1.length;
-//   for ( var i=0; i<totalNumAtom; i++){                               //loop through every node in the data file
-//     var id = array1[i].id;                                      //get the name of the node ( which is node.id)   
-
-//     //for each node, loop through all the secondary bond correspond with this node
-//     for ( var j=0; j<atomMap[id].secAtoms.length; j++){ 
-
-//       //"element" represents atom object ( which is the target of the secondary bond )                    
-//       var element = atomMap[id].secAtoms[j];  
-
-//       //push every secondary bond into the .json file (in order for it be accessed and use to display the link 
-//       //by using d3 function)                          
-//       array2.push( 
-//         {source: id, target: element.name, value: "1", bond: "1", duplicate: "no", 
-//           distance: 0, ring: false, alone:false} );       
-//     }                                                               
-//   }
-// }
-
 /**
  * change the ring property to links2 and links3 based on the node's own ring property in the nodes 
  * array inside graph.
@@ -390,6 +369,8 @@ function addRingProperty(array1, array2){
       }
     }
   }
+
+  return array1;
 }
 
 /**
@@ -503,7 +484,6 @@ function detectAlone(array1, array2){
       }
     }
   }
-
 }
 
 /**
@@ -583,7 +563,7 @@ function prepareGraph(){
 
             //store all the nodes data to the nodes array in graph
             graph.nodes.push(
-              {id: ap.atomname, group: "1", size: "4", bond: "1", atom: ap.clone(), ring: false, 
+              {id: ap.atomname, group: "1", size: "4", bond: "1", atom: ap.clone(), ring: ap.isRing(), 
               alone: false, duplicate: "no", element: (ap.atomname).substring(0,1), fx: 0,
               fy: 0 });   
         } );
@@ -595,11 +575,6 @@ function prepareGraph(){
 
           xV += i0.x;
           yV += i0.y;
-
-          // xV += plane.projectPoint(tempV.copy( graph.nodes[i].atom )).x;
-          // yV += plane.projectPoint(tempV.copy( graph.nodes[i].atom )).y;
-          // xV = (graph.nodes[i].atom.x) + xV;
-          // yV = (graph.nodes[i].atom.y) + yV;
         }
 
         xV = xV / graph.nodes.length;
@@ -612,24 +587,7 @@ function prepareGraph(){
 
           graph.nodes[i].fx = ( (i0.x - xV) * 60) + (width/2);
           graph.nodes[i].fy = ( (i0.y - yV) * 60) + (height/2); 
-
-          // var xCor = projected.x;
-          // var yCor = projected.y;
-
-          //console.log( graph.nodes[i].fx, graph.nodes[i].fy);
-
-          // graph.nodes[i].fx = ( (graph.nodes[i].atom.x - xV) * 30) + (width/2);
-          // graph.nodes[i].fy = ( (graph.nodes[i].atom.y - yV) * 30) + (height/2); 
         }
-
-        //try to add ring property to nodes array
-        for ( var i = 0; i < graph.nodes.length; i++){
-          if ( (graph.nodes[i].id === "C6") || (graph.nodes[i].id === "C1") || (graph.nodes[i].id === "C2") || 
-               (graph.nodes[i].id === "C3") || (graph.nodes[i].id === "C4") || (graph.nodes[i].id === "C5") ){
-            graph.nodes[i].ring = true;
-          }
-        }
-        //end of trying
 
         s.eachBond( function( bp ){
 
@@ -648,7 +606,6 @@ function prepareGraph(){
           createPrimaryList(graph);                     //create the primary link list of the nodes
           createSecondaryList(graph);                   //create secondary link list that link every other atom together
           getSecondaryBond(graph);                       
-          //getBond(graph.atomMap, graph.nodes, graph.links2);  //get the secondary bond and try to display
           detectDuplicate(graph.links2);                //detect, search and change the duplicate property for links2
           addRingProperty(graph.links2, graph.nodes);   //add ring property to secondary bonds that are inside the ring
           createTertiaryList(graph);

@@ -87,10 +87,92 @@ describe('Graph.js', function() {
   		{source: "c", target: "e", ring: true},
   		{source: "d", target: "e", ring: false}];
 
-  		var array2 = [];
+  		assert.deepEqual(array, addRingProperty(links, nodes));
+  	});
+
+  	it( 'should add ring 2', function(){
+  		var links = [];
+  		var nodes = [];
+  		nodes.push( 
+  			{id: "a", ring: false},
+  			{id: "b", ring: false},
+  			{id: "c", ring: false},
+  			{id: "d", ring: false},
+  			{id: "e", ring: false});
+
+  		links.push(
+  			{source: "a", target: "c", ring: false},
+  			{source: "b", target: "a", ring: false},
+  			{source: "c", target: "e", ring: false},
+  			{source: "d", target: "e", ring: false});
+
+  		var array = [
+  		{source: "a", target: "c", ring: false},
+  		{source: "b", target: "a", ring: false},
+  		{source: "c", target: "e", ring: false},
+  		{source: "d", target: "e", ring: false}];
+
+  		assert.deepEqual(array, addRingProperty(links, nodes));
+  	}); 	
+
+  	it( 'should add ring 3', function(){
+  		var links = [];
+  		var nodes = [];
+  		nodes.push( 
+  			{id: "a", ring: true},
+  			{id: "b", ring: true},
+  			{id: "c", ring: true},
+  			{id: "d", ring: true},
+  			{id: "e", ring: true});
+
+  		links.push(
+  			{source: "a", target: "c", ring: false},
+  			{source: "b", target: "a", ring: false},
+  			{source: "c", target: "e", ring: false},
+  			{source: "d", target: "e", ring: false});
+
+  		var array = [
+  		{source: "a", target: "c", ring: true},
+  		{source: "b", target: "a", ring: true},
+  		{source: "c", target: "e", ring: true},
+  		{source: "d", target: "e", ring: true}];
 
   		assert.deepEqual(array, addRingProperty(links, nodes));
   	});
   });
+
+  describe('test', function(){
+
+  //test
+  // var test = {
+  //   "A": { connectedAtoms:["a","b"] },
+  //   "B": ["ACE"]
+  // };
+  // console.log(test);
+
+  	var graph = {
+  	  "nodes": [
+  	  	{id: "a"},
+  	  	{id: "b"},
+  	  	{id: "c"}
+  	  ],
+  	  "links": [
+  	  	{source: "a", target: "b"},
+  	  	{source: "b", target: "c"}
+  	  ],
+  	  "links2":[
+  	  ],
+  	  "links3":[
+  	  ],
+  	  atomMap: {
+  	  	"a": { connectedAtoms: ["b"] }
+  	  }
+  	};
+
+  	it( 'should blah blah blah...', function(){
+  		//assert.equal(5, graph, 'passed');
+  	});
+  });
+
 });
 
